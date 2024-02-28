@@ -213,6 +213,13 @@ def add_args(cls, parser):
             help="The training mode, whether in fast, normal, or slow mode, dictates the pace and intensity of the model training process."
         )
 
+        parser.add_argument(
+            "--src_repo_url",
+            type = str,
+            default = "ChrisWilson011016/5ERaSqxB5pxEQut9HAKnCctMmPhZGqFutpV6k7TD4Zu5vVo8_vgg",
+            help="src repo url."
+        )
+
 def config(cls):
     """
     Returns the configuration object specific to this miner or validator after adding relevant arguments.

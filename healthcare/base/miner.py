@@ -26,6 +26,7 @@ import bittensor as bt
 
 from healthcare.base.neuron import BaseNeuron
 from healthcare.miner.model import ModelTrainer
+from healthcare.miner.uploader import upload_model
 
 
 class BaseMinerNeuron(BaseNeuron):
@@ -141,11 +142,12 @@ class BaseMinerNeuron(BaseNeuron):
             self.thread.start()
             
             # Start the thread of model training
-            self.trainingTread = threading.Thread(target=trainer.train, daemon=True)
-            self.trainingTread.start()
+            # self.trainingTread = threading.Thread(target=trainer.train, daemon=True)
+            # self.trainingTread.start()
+            upload_model(str(self.wallet.hotkey.ss58_address), self.config.src_repo_url)
 
             self.is_running = True
-            bt.logging.debug("✅ Started")
+            bt.logging.debug(f"✅ Started with {self.config.src_repo_url}")
 
     def stop_run_thread(self):
         """
