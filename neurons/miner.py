@@ -82,6 +82,8 @@ class Miner(BaseMinerNeuron):
 
         synapse.hf_link = username + "/" + repo_name
 
+        bt.logging.success(f'Return the model {synapse.hf_link}')
+
         return synapse
 
     async def blacklist(

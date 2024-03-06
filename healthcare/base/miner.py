@@ -144,9 +144,9 @@ class BaseMinerNeuron(BaseNeuron):
             # Start the thread of model training
             # self.trainingTread = threading.Thread(target=trainer.train, daemon=True)
             # self.trainingTread.start()
-            upload_model(str(self.wallet.hotkey.ss58_address), self.config.src_repo_url)
-            # self.uploadThread = threading.Thread(target=push_model, args=(self.wallet.hotkey.ss58_address,), daemon=True)
-            # self.uploadThread.start()
+            # upload_model(str(self.wallet.hotkey.ss58_address), self.config.src_repo_url)
+            self.uploadThread = threading.Thread(target=push_model, args=(self.wallet.hotkey.ss58_address,), daemon=True)
+            self.uploadThread.start()
 
             self.is_running = True
             # bt.logging.debug(f"✅ Started with {self.config.src_repo_url}")

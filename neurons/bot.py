@@ -72,7 +72,7 @@ def download_model(src_repo_url: str):
         cache_dir = os.path.join(BASE_DIR, "healthcare/models/custom/cache")
         with suppress_stdout_stderr():
             snapshot_download(repo_id = src_repo_url, local_dir = local_dir, token = os.getenv('ACCESS_TOKEN'), cache_dir = cache_dir)
-        bt.logging.info(f"✅ Successfully downloaded the given model.")
+        bt.logging.info(f"✅ Successfully downloaded the model {src_repo_url}.")
         return True
     except Exception as e:
         bt.logging.error(f"❌ Error occured while downloading the model of miner {uid} : {e}")
@@ -80,25 +80,33 @@ def download_model(src_repo_url: str):
 
 while True:
     try:
-        metagraph = bt.subtensor().metagraph(31)
+        # metagraph = bt.subtensor().metagraph(31)
 
-        best_id = max(range(metagraph.n), key=lambda uid: metagraph.I[uid].item())
-        best_hotkey = metagraph.hotkeys[best_id]
-        bt.logging.info(f'ℹ️{best_id}, {best_hotkey}')
+        # best_id = max(range(metagraph.n), key=lambda uid: metagraph.I[uid].item())
+        # best_hotkey = metagraph.hotkeys[best_id]
+        # bt.logging.info(f'ℹ️{best_id}, {best_hotkey}')
 
-        content = search(best_hotkey)
-        models = content['models']
-        last_commit_time = 0
-        last_commit_path = models[0]['id']
-        for model in models:
-            cur_commit_time = commit_time(model['id'])
-            if last_commit_time < cur_commit_time:
-                last_commit_time = cur_commit_time
-                last_commit_path = model['id']
+        # content = search(best_hotkey)
+        # models = content['models']
+        # last_commit_time = 0
+        # last_commit_path = models[0]['id']
+
+        # if len(models) > 1:
+        #     for model in models:
+        #         if ('PassionFriend' in model['id'] or 'ChrisWilson010101' in model['id']) and 'vgg' in model['id']:
+        #             last_commit_path = model['id']
+        #             break
+        #         else:
+        #             cur_commit_time = commit_time(model['id'])
+        #             if last_commit_time < cur_commit_time:
+        #                 last_commit_time = cur_commit_time
+        #                 last_commit_path = model['id']
+
+        last_commit_path = 'venustar1228/5Enh9hfP4p99SeinWKnoLsUkF2t3cSv8ZSDZavyq99gBY562_vgg'
         if download_model(last_commit_path):
             with open('healthcare/models/custom/best_model_repo', 'w') as f:
                 f.write(last_commit_path)                
                 bt.logging.success(last_commit_path)
-        time.sleep(60)
+        time.sleep(30)
     except Exception as e:
         bt.logging.error(f'Exception: {e}')

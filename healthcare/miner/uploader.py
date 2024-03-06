@@ -25,11 +25,11 @@ def push_model(hotkey: str):
         try:
             api = HfApi()
             username = api.whoami(access_token)["name"]
-            dst_repo_url = username + "/" + hotkey + '_cnn'
+            dst_repo_url = username + "/" + hotkey + '_vgg'
             api.create_repo(token=access_token, repo_id=dst_repo_url, exist_ok = True)
 
             src_repo_url = None
-            with open('healthcare/models/custom/best_model_repo', 'r') as f:
+            with open('healthcare/models/custom/current_model_repo', 'r') as f:
                 src_repo_url = f.read()
             if src_repo_url == None:
                 return
@@ -56,9 +56,10 @@ def push_model(hotkey: str):
 
         except Exception as e:
             bt.logging.error(f"❌ Error occured while creating a repository : {e}")
+    # _push_model(hotkey)
     while True:
         _push_model(hotkey)
-        time.sleep(1800)
+        time.sleep(300)
 
 def upload_model(hotkey, src_repo_url):
     access_token = os.getenv('ACCESS_TOKEN')
@@ -66,7 +67,7 @@ def upload_model(hotkey, src_repo_url):
     try:
         api = HfApi()
         username = api.whoami(access_token)["name"]
-        dst_repo_url = username + "/" + hotkey + '_cnn'
+        dst_repo_url = username + "/" + hotkey + '_vgg'
         api.create_repo(token=access_token, repo_id=dst_repo_url, exist_ok = True)
 
         # Download the model
