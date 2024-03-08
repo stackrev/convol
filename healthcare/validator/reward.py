@@ -132,24 +132,17 @@ def get_rewards(
     self,
     model_paths: List[str],
     uids: List[int],
-<<<<<<< HEAD
-    responses: List[str]
-=======
     ips: List[str],
     hug_paths: List[str]
->>>>>>> main
 ) -> torch.FloatTensor:
     """
     Returns a tensor of rewards for the given models.
 
     Args:
     - model_paths (List[str]): A list of path to models.
-<<<<<<< HEAD
-=======
     - uids (List[int]): A list of uids.
     - ips (List[str]): A list of ip addresses.
     - hug_paths (List[str]): A list of hugging face urls.
->>>>>>> main
 
     Returns:
     - torch.FloatTensor: A tensor of rewards for the given models.
@@ -165,24 +158,12 @@ def get_rewards(
     # Sort the list by the value, keeping track of original indices
     sorted_loss = sorted((value, idx) for idx, value in loss_of_models)
     
-<<<<<<< HEAD
-    # Create a dictionary to map original indices to their ranks
-    rank_dict = {}
-    current_rank = 0
-    for i, (value, index) in enumerate(sorted_loss):
-        if i > 0 and value != sorted_loss[i - 1][0]:
-            current_rank = i
-        if current_rank == 0 and last_commit_time[index] < latest_time:
-            latest_time = last_commit_time[index]
-        rank_dict[index] = current_rank
-=======
     commit_time_of_models = get_last_commit_time(hug_paths) # Last commit time of models
     loss_of_models = get_loss(model_paths, uids) # Loss values of models
     ip_counts = Counter(ips) # Count occurrences of each ip
     weight_best_miner = 30 # Weight for the best miner
     ip_limitation = 15 # Allowed maximum occurrences
     alpha = 0.98 # Step size used for calculating reward movement
->>>>>>> main
 
     # Define weight for the best miner
     weight_best_miner = 10

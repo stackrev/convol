@@ -17,11 +17,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 # Define the version of the healthcare module.
-<<<<<<< HEAD
-__version__ = "1.4.2"
-=======
 __version__ = "1.5.1"
->>>>>>> main
 version_split = __version__.split(".")
 __spec_version__ = (
     (1000 * int(version_split[0]))
