@@ -43,48 +43,16 @@ def suppress_stdout_stderr():
         finally:
             sys.stdout, sys.stderr = old_stdout, old_stderr
 
-def get_last_commit_time(model_paths: List[str]):
-    """
-    This method returns the last commit time of the models.
-
-    Args:
-    - model_paths (List[str]): The path of models.
-
-    Returns:
-    - List[int]: The last commit time of the models in the form of integer.
-    """
-    last_commit_time = []
-    for model_path in model_paths:
-        if not model_path:
-            last_commit_time.append(float('inf'))
-            continue
-        try:
-            api_url = f"https://huggingface.co/api/models/{model_path}"
-            response = requests.get(api_url)
-
-            if response.status_code == 200:
-                model_info = response.json()
-                commit_time = model_info.get("lastModified")
-                
-                # Parse the date string to a datetime object
-                date_obj = datetime.fromisoformat(commit_time[:-1])  # Removing 'Z' at the end
-
-                # Convert the datetime object to UNIX timestamp (integer)
-                timestamp = int(date_obj.timestamp())
-
-                last_commit_time.append(timestamp)
-            else:
-                last_commit_time.append(float('inf'))
-        except Exception as e:
-            last_commit_time.append(float('inf'))
-    return last_commit_time
-
-def get_loss(model_paths: List[str], uids: List[int]):
+def get_loss(
+    model_paths: List[str],
+    uids: torch.LongTensor
+) -> List[float]:
     """
     This method returns a loss value for the model, which is used to update the miner's score.
 
     Args:
     - model_paths (List[str]): The path of models.
+    - uids (torch.LongTensor): The uid of models.
 
     Returns:
     - List[int, float]: The loss value for the models.
@@ -131,18 +99,20 @@ def get_loss(model_paths: List[str], uids: List[int]):
 def get_rewards(
     self,
     model_paths: List[str],
-    uids: List[int],
+    uids: torch.LongTensor,
     ips: List[str],
-    hug_paths: List[str]
+    commit_blocks: List[int],
+    repo_ids: List[str]
 ) -> torch.FloatTensor:
     """
     Returns a tensor of rewards for the given models.
 
     Args:
     - model_paths (List[str]): A list of path to models.
-    - uids (List[int]): A list of uids.
+    - uids (torch.LongTensor): A list of uids.
     - ips (List[str]): A list of ip addresses.
-    - hug_paths (List[str]): A list of hugging face urls.
+    - commit_blocks (List[int]): A list of block number of commitment.
+    - repo_ids (List[str]): A list of repo id of the model on hugging face.
 
     Returns:
     - torch.FloatTensor: A tensor of rewards for the given models.
@@ -158,29 +128,34 @@ def get_rewards(
     # Sort the list by the value, keeping track of original indices
     sorted_loss = sorted((value, idx) for idx, value in loss_of_models)
     
-    commit_time_of_models = get_last_commit_time(hug_paths) # Last commit time of models
     loss_of_models = get_loss(model_paths, uids) # Loss values of models
     ip_counts = Counter(ips) # Count occurrences of each ip
     weight_best_miner = 30 # Weight for the best miner
     ip_limitation = 15 # Allowed maximum occurrences
     alpha = 0.98 # Step size used for calculating reward movement
 
-    # Define weight for the best miner
-    weight_best_miner = 10
+    # Rank of models
+    loss_indices = list(enumerate(loss_of_models)) # Combine loss values with their corresponding indices
+    sorted_indices = sorted(loss_indices, key=lambda x: (x[1], commit_blocks[x[0]])) # Loss first, then time
+    ranks = {} # A dictionary to store ranks
 
-    # Define groupA and groupB
-    group_A_rank = current_rank / 20 + 1
+    # Assign ranks to the sorted indices
+    for rank, pair in enumerate(sorted_indices):
+        idx = pair[0]
+        ranks[idx] = rank
+        if rank and repo_ids[idx] == repo_ids[idx - 1]:
+            ranks[idx] = -1
 
     alpha_A = 0.8
     alpha_B = 0.9
 
-    # Calculate reward for miners
-    rewards = []
-    for loss_of_model in loss_of_models:
-        idx = loss_of_model[0]
-        loss = loss_of_model[1]
-        rank = rank_dict[idx]
-        if rank == 0 and last_commit_time[idx] == latest_time:
+    for idx, loss_of_model in enumerate(loss_of_models):
+        count_miners_same_ip = ip_counts[ips[idx]] # Count of miners with the same ip address
+        rank = ranks[idx] # Rank of the model
+
+        if rank == -1 or loss_of_model == float('inf') or commit_blocks[idx] == float('inf'):
+            reward = 0
+        elif rank == 0:
             reward = weight_best_miner
         elif rank < group_A_rank:
             reward = alpha_A ** rank
