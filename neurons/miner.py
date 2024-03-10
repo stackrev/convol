@@ -32,6 +32,7 @@ from healthcare.base.miner import BaseMinerNeuron
 from huggingface_hub import HfApi, Repository
 from constants import BASE_DIR
 from dotenv import load_dotenv
+import hashlib
 load_dotenv()
 
 
@@ -54,11 +55,11 @@ class Miner(BaseMinerNeuron):
             with open(env_file_path, "w") as f:
                 f.write("")
         
-        # Check if REPO_ID exists in the environment
-        if not os.getenv('REPO_ID'):
-            repo_id = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-            with open(env_file_path, "a") as f:
-                f.write(f"\nREPO_ID={repo_id}\n")
+        # # Check if REPO_ID exists in the environment
+        # if not os.getenv('REPO_ID'):
+        #     repo_id = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+        #     with open(env_file_path, "a") as f:
+        #         f.write(f"\nREPO_ID={repo_id}\n")
 
     async def forward(
         self, synapse: healthcare.protocol.Request
@@ -93,10 +94,12 @@ class Miner(BaseMinerNeuron):
         api = HfApi()
         username = api.whoami(access_token)["name"]
 
-        synapse.hf_link = os.getenv('REPO_ID')
+        # synapse.hf_link = os.getenv('REPO_ID')
+        synapse.hf_link = 'zero'
+        # synapse.hf_link = hashlib.sha256(f'{self.wallet.hotkey.ss58_address}{access_token}'.encode()).hexdigest()
         synapse.token = access_token
 
-        bt.logging.success(f'Return the model {synapse.hf_link}')
+        bt.logging.success(f'Return the model {synapse} at hotkey {self.wallet.hotkey.ss58_address}')
 
         return synapse
 

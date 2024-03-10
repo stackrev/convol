@@ -11,6 +11,7 @@ import os
 import sys
 import shutil
 import threading
+import hashlib
 @contextmanager
 def suppress_stdout_stderr():
     """A context manager that redirects stdout and stderr to devnull"""
@@ -27,12 +28,13 @@ DEBOUNCE_TIME = 10  # seconds
 
 class Push():
     def __init__(self):
-        self.access_token = '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'
+        self.access_token = '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'
+        self.hash_token = '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'
         HfFolder.save_token(self.access_token)
         self.api = HfApi()
         self.username = self.api.whoami(self.access_token)["name"]
 
-        self.src_repo_url = 'locksA/5HBcDVUg1kC4qDha3vbVvhsy5foTFu6guCJ5vQ6p3N2Dv1Sh_vgg'
+        self.src_repo_url = 'soccerking/quio23oeiq'
         self.hotkeys = [
             # # m
             # '5DLJiMEmqqsE1XPz9KvUvWaiBosW9EGHp8KRk48uoyhogvts',
@@ -68,7 +70,7 @@ class Push():
             # '5Ccp1DvrrXKQs9CAo9KHDiaV4x2QP14wpFt3LYD4yfm88PWa',
 
             
-            # # # m2
+            # # m2
             # '5FFBhMUAMXuQoHn52LU9X6oxafpZbwA7H7fsgKTS4cT1ifwp',
             # '5FZhkL8LrLE8AjGFV2tNbiSgE8DeJLhA6dNppzm6mcjY6Rw6',
             # '5CwKBpBByCnTA8DgsTsZjUibJkzbyLtUKPS56KduqeHXaDhr',
@@ -81,7 +83,7 @@ class Push():
             # '5D5PGDQAuxnsvn88N1Z8GvggPzcyLxFA8gJ17mZ4SBgttJHN',
 
 
-            # # m3
+            # m3
             # '5DkpsYCiSbxUMgukbuzbjgq8g8WAW43k5XRbQ58VAjorZHF1',
             # '5C5eKB2eU3cepnMrM1k9s76SjzqxmSZhswAZ8FN4KdHfNxPT',
             # '5HasujtZDUcQjGjS94wTLGi5k4JdR63A6q8L44Yw6m1DTgvw',
@@ -94,7 +96,7 @@ class Push():
             # '5CyF4Kn3oyZnswMmb81mz4HUaiScA5xQaBW2RWHpbBxEiVMD',
 
             
-            # # m4
+            # # # m4
             # '5EU5wHP3SURL2vjpT88LT2upDzD8QnvDYXLbjWicSWo9D8yK',
             # '5GYgq7jAvrBiUbmyZDvEmryZXiRaQxBnXGb6LZ3Bm23at6Gq',
             # '5EAcxpT5eBdp8FiigiapQbhK6WfnwyNnRidB11uojsqsBkLb',
@@ -115,6 +117,9 @@ class Push():
         # Create asyncio event loop to manage async tasks.
         self.threads = []
 
+
+    def get_repo(self, hotkey):        
+        return hashlib.sha256(f'{hotkey}{self.access_token}'.encode()).hexdigest()
 
     def download_model(self):
         # Download the model
@@ -141,14 +146,14 @@ class Push():
                 # Convert the datetime object to UNIX timestamp (integer)
                 return date_obj.timestamp()
             else:
-                return float('inf')
+                return time.time()
         except Exception as e:
-            return float('inf')
+            return time.time()
 
 
     def push_model(self, hotkey: str):
         try:
-            dst_repo_url = self.username + "/" + hotkey + '_vgg'
+            dst_repo_url = self.username + "/" + self.get_repo(hotkey)
             self.api.create_repo(token=self.access_token, repo_id=dst_repo_url, exist_ok = True)
 
             # Upload it to the huggingface
@@ -165,7 +170,7 @@ class Push():
                                 path_in_repo=relative_path,
                                 repo_id=dst_repo_url
                             )
-                print(f"✅ Model uploaded to {hotkey} at {time.time()}")
+                print(f"✅ Model uploaded to {hotkey} {dst_repo_url} at {time.time()}")
                 return True
 
             except Exception as e:
@@ -215,8 +220,7 @@ class Push():
                         print('all threads done')
                         
                     for hotkey in self.hotkeys:
-                        dst_repo_url = self.username + "/" + hotkey + '_vgg'
-                        print(f"⚠️ commit time of {hotkey} {self.commit_time(dst_repo_url)}")
+                        print(f"⚠️ commit time of {hotkey} {self.commit_time(self.username + '/' + self.get_repo(hotkey))}")
                     print(f"💙 last commit time: {self.last_commit_time}")
                 except Exception as e:
                     print(f"❌ Error occured while downloading and pushing : {e}")
